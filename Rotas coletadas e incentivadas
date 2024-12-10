@@ -1,0 +1,65 @@
+function mostrarRotasRepetidas() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dadosSheet = ss.getSheetByName("Dados");
+  var rotasSheet = ss.getSheetByName("Rotas coletadas");
+  var incentivosSheet = ss.getSheetByName("Incentivos");
+
+  // Verificar se as abas foram encontradas corretamente
+  if (!dadosSheet || !rotasSheet || !incentivosSheet) {
+    Logger.log("Uma das abas não foi encontrada.");
+    return;
+  }
+
+  var rotasData = rotasSheet.getDataRange().getValues();
+  var incentivosData = incentivosSheet.getDataRange().getValues();
+
+  var colunaIdRotas = 9; 
+  var colunaIdIncentivo = 4; 
+
+  var rotasRepetidas = [];
+
+  for (var i = 1; i < rotasData.length; i++) {
+    var idRota = rotasData[i][colunaIdRotas - 1];
+    if (!idRota || isNaN(idRota)) continue;
+
+    idRota = String(idRota).trim();
+
+    Logger.log("Verificando Rota Coletada (ID): " + idRota);
+
+    for (var j = 1; j < incentivosData.length; j++) {
+      var idIncentivo = incentivosData[j][colunaIdIncentivo - 1];
+      if (!idIncentivo || isNaN(idIncentivo)) continue;
+
+      idIncentivo = String(idIncentivo).trim();
+
+      Logger.log("Comparando com Rota Incentivada (ID): " + idIncentivo);
+
+      if (idRota === idIncentivo) {
+        rotasRepetidas.push([idRota]);
+        Logger.log("Rota repetida encontrada: " + idRota);
+        break;
+      } else {
+        Logger.log("IDs não coincidem. Rota Coletada: " + idRota + " | Rota Incentivada: " + idIncentivo);
+      }
+    }
+  }
+
+  var startRow = 2; 
+
+  // Verificar se há rotas repetidas antes de tentar preencher na aba
+  if (rotasRepetidas.length > 0) {
+    var numRows = rotasRepetidas.length;
+    var range = dadosSheet.getRange(startRow, 1, numRows, 1);
+
+    try {
+      range.setValues(rotasRepetidas);
+      Logger.log("Rotas repetidas foram preenchidas na aba 'Dados'.");
+    } catch (error) {
+      Logger.log("Erro ao preencher as rotas na aba 'Dados': " + error.message);
+    }
+  } else {
+    // Caso não haja rotas repetidas, adicionar a mensagem
+    dadosSheet.getRange(startRow, 1).setValue("Nenhuma rota foi encontrada");
+    Logger.log("Nenhuma rota repetida foi encontrada.");
+  }
+}
